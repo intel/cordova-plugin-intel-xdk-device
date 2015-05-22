@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-  id="com.intel.xdk.device"
+  id="intel.xdk.device"
   version="0.0.1">
   <name>Intel XDK Device</name>
   <description>Intel XDK Device Plugin</description>
