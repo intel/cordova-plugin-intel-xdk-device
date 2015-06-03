@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!--
+Copyright 2015 Intel Corporation
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file 
+except in compliance with the License. You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the 
+License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+either express or implied. See the License for the specific language governing permissions 
+and limitations under the License
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="width=device-width"/>
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>Intel XDK Device Test</title>
+    </head>
+    <body>
+        <!-- <div class="app">
+            <h1>Apache Cordova</h1>
+            <div id="deviceready" class="blink">
+                <p class="event listening">Connecting to Device</p>
+                <p class="event received">Device is Ready</p>
+            </div>
+            <br>
+            <button onclick="intel.xdk.device.init();">Init - should happen automatically</button>
+            <button onclick="intel.xdk.device.managePower(true, false)">managePower</button>
+            <button onclick="intel.xdk.device.scanBarcode()">scanBarcode</button>
+            <button onclick="showRemoteSite()">showRemoteSite</button>
+            <button onclick="addVirtualPage()">addVirtualPage</button>
+        </div> -->
+        <h1>Properties</h1>
+        <button onclick="alert(intel.xdk.device.connection);">connection</button>
+        <button onclick="alert(intel.xdk.device.hasCaching);">hasCaching</button>
+        <button onclick="alert(intel.xdk.device.hasStreaming);">hasStreaming</button>
+        <button onclick="alert(intel.xdk.device.initialOrientation);">initialOrientation</button>
+        <button onclick="alert(intel.xdk.device.model);">model</button>
+        <button onclick="alert(intel.xdk.device.orientation);">orientation</button>
+        <button onclick="alert(intel.xdk.device.osversion);">osversion</button>
+        <button onclick="alert(intel.xdk.device.phonegapversion);">phonegapversion</button>
+        <button onclick="alert(intel.xdk.device.platform);">platform</button>
+        <button onclick="alert(intel.xdk.device.queryString);">queryString</button>
+        <button onclick="alert(intel.xdk.device.uuid);">uuid</button>
+        <h1>Methods</h1>
+        <button onclick="addVirtualPage();">addVirtualPage</button>
+        <button onclick="removeVirtualPage();">removeVirtualPage</button>
+        <button onclick="showRemoteSite(Url);">showRemoteSite</button>
+        <button onclick="hideStatusBar();">hideStatusBar</button>
+        <button onclick="launchExternal(Url);">launchExternal</button>
+        <button onclick="managePower(true, false);">managePower</button>
+        <!--<button onclick="runInstallNativeApp();">runInstallNativeApp</button>-->
+        <button onclick="scanBarcode();">scanBarcode</button>
+        <button onclick="sendEmail();">sendEmail</button>
+        <button onclick="sendSMS();">sendSMS</button>
+        <button onclick="setAutoRotate(true)">setAutoRotate(true)</button>
+        <button onclick="setAutoRotate(false)">setAutoRotate(false)</button>
+        <button onclick="setRotateOrientation('portrait');">setRotateOrientation(portrait)</button>
+        <button onclick="setRotateOrientation('landscape');">setRotateOrientation(landscape)</button>
+        <button onclick="setRotateOrientation('any');">setRotateOrientation(any)</button>
+        <button onclick="showRemoteSiteExt(Url);">showRemoteSiteExt</button>
+        <button onclick="updateConnection();">updateConnection</button>
+        <button onclick="getRemoteData();">getRemoteData</button>
+        <button onclick="getRemoteDataWithID();">getRemoteDataWithID</button>
+        <button onclick="getRemoteDataExt();">getRemoteDataExt</button>
+        <!--<button onclick="blockRemotePage();">blockRemotePage</button>-->
+        <button onclick="copyToClipboard('hello, world');">copyToClipboard</button>
+        <!--<h1>Methods only for windows8</h1>
+        <button onclick="addRemoteScript();">addRemoteScript</button>-->
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>  
+        <script type="text/javascript">
+            //app.initialize();
+            var showingAlert = false;
+
+            //Workaround for windows8
+            if(!this.alert){
+                alert = function (message) {
+                    if (!showingAlert) {
+                        showingAlert = true;
+
+                        var dialog = new Windows.UI.Popups.MessageDialog(message)
+                        dialog.showAsync().done(function () {
+                            showingAlert = false;
+                        });
+                    }
+                };
+            }
+
+            //Test for javascript interface "intel.xdk.device.addVirtualPage()".
+            var virtualPagesCount = 0;
+
+            function onVirtualPageChange(num){
+                alert('Num of current virtual pages: ' + num);
+            }
+
+            function addVirtualPage(){
+                intel.xdk.device.addVirtualPage();
+                virtualPagesCount ++;
+                onVirtualPageChange(virtualPagesCount);
+            }
+
+            //Test for javascript interface "intel.xdk.device.removeVirtualPage()".
+            function removeVirtualPage(){
+                intel.xdk.device.removeVirtualPage();
+                virtualPagesCount > 0 ? virtualPagesCount -- : virtualPagesCount = 0;
+                onVirtualPageChange(virtualPagesCount);
+            }
+
+            //Test for event "intel.xdk.device.hardware.back".
+            function onHardwareBack(){
+                document.addEventListener('intel.xdk.device.hardware.back',function(){
+                    alert('intel.xdk.device.hardware.back is fired.');
+                    virtualPagesCount --
+                    onVirtualPageChange(virtualPagesCount);
+                });
+            }
+
+            onHardwareBack();
+
+            //Test for javascript interface "intel.xdk.device.showRemoteSite()" and "intel.xdk.device.showRemoteSite()".
+            //You can close the remote site with the back button on the top left side of the webview, it will triggle the function "intel.xdk.device.closeRemoteSite()";
+            //You can modify the URL to any others if you would like it to be.
+            //var Url = 'http://www.google.com/';
+            var Url = 'http://www.cnet.com/';
+
+            function showRemoteSite(url){
+                intel.xdk.device.showRemoteSite(url, 280, 0, 50, 50);
+            }
+
+            //Test for javascript intelface "intel.xdk.device.hideStatusBar()".
+            function hideStatusBar(){
+                intel.xdk.device.hideStatusBar();
+            }
+
+            //Test for javascript interface "intel.xdk.device.launchExternal()".
+            function launchExternal(url){
+                intel.xdk.device.launchExternal(url);
+            }
+
+            //Test for javascript interface "intel.xdk.device.managePower()".
+            function managePower(shouldStayOn, onlyWhenPluggedIn){
+                intel.xdk.device.managePower(shouldStayOn, shouldStayOn);
+            }
+
+            //Test for javascript interface "intel.xdk.device.runInstallNativeApp()";
+            function runInstallNativeApp(){
+                intel.xdk.device.runInstallNativeApp('playmous', 'applab.playmous://', 'market://details?id=com.playmous.ttf', 'com.playmous.ttf');
+            }
+
+            //Test for javascript interface "intel.xdk.device.scanBarcode()".
+            function scanBarcode(){
+                intel.xdk.device.scanBarcode();
+            }
+
+            //Test for event intel.xdk.device.barcode.scan.
+            (function(){
+                document.addEventListener('intel.xdk.device.barcode.scan', function(e){
+                    if(e.success == true){
+                        alert(e.codedata);
+                    }
+                    else{
+                        alert('Scanning failure.');
+                    }
+                });
+            })();
+
+            //Test for javascript interface "intel.xdk.device.sendEmail()".
+            function sendEmail(){
+                intel.xdk.device.sendEmail("This is text email from intel.xdk.device api.", "html5tools@intel.com,html5tools@gmail.com", "Text mail", true, "cc@intel.com", "bcc@intel.com");
+            }
+
+            //Test for javascript interface "intel.xdk.device.sendSMS()".
+            function sendSMS(){
+                intel.xdk.device.sendSMS("This is test short message", "10086");
+            }
+
+            //Test for javascript interface "intel.xdk.device.setAutoRotate()".
+            function setAutoRotate(shouldAutoRotate){
+                intel.xdk.device.setAutoRotate(shouldAutoRotate);
+            }
+
+            //Test for javascript interface "intel.xdk.device.setBasicAuthentication()".
+            function setBasicAuthentication(){
+                intel.xdk.device.setBasicAuthentication();
+            }
+
+            //Test for javascript interface "intel.xdk.device.setRotateOrientation()".
+            function setRotateOrientation(orientation){
+                intel.xdk.device.setRotateOrientation(orientation);
+            }
+
+            //Test for javascript interface "intel.xdk.device.showRemoteSiteExt()".
+            function showRemoteSiteExt(url){
+                intel.xdk.device.showRemoteSiteExt(url, 280, 0, 280, 0, 50, 50);
+            }
+
+            //Test for javascript interface "intel.xdk.device.updateConnection()".
+            function updateConnection(){
+                intel.xdk.device.updateConnection();
+            }
+
+            //Test for event "intel.xdk.device.connection.update".
+            function onConnectionUpdate(){
+                document.addEventListener('intel.xdk.device.connection.update', function(){
+                    alert('intel.xdk.device.connection.update is fired. current connection type is: ' + intel.xdk.device.connection);
+                });
+            }
+
+            onConnectionUpdate();
+
+            //Test for javascript interface "intel.xdk.device.getRemoteData()".
+            //Please start server before you run the test. This is a simple node.js server in the test/test_server directory, or you can use your own server. About how to use the node.js upload server, please refer to README.
+            //Replace the serverURL to your own IP address.
+            //var serverURL = "http://localhost:8000";
+            var serverURL = "http://www.html5dev-software.intel.com/wp-content/plugins/wp-video-lightbox/css/prettyPhoto.css";
+
+            var success = function(data){
+                alert("success: " + data);
+            }
+
+            var error = function(data){
+                alert("error: " + data);
+            }
+
+            function getRemoteData(){
+                intel.xdk.device.getRemoteData(serverURL, "GET", "name=intel.xdk.device", "success", "error");
+            }
+
+            //Test for javascript interface "intel.xdk.device.getRemoteData()".
+            var successCallback = function(uniqueID, data){
+                alert("success: " + data + ", uuid: " + uniqueID);
+            }
+
+            var errorCallback = function(uniqueID, data){
+                alert("error: " + data);
+            }
+
+            function getRemoteDataWithID(){
+                intel.xdk.device.getRemoteDataWithID(serverURL, "GET", "name=intel.xdk.device", "successCallback", "errorCallback", 12345);
+            }
+
+            //Test for javascript interface "intel.xdk.device.getRemoteDataExt()".
+            function getRemoteDataExt(){
+                var paramsObj = new intel.xdk.device.RemoteDataParameters();
+
+                paramsObj.url = serverURL;
+                paramsObj.id = "1234";
+                paramsObj.body = "name=intel.xdk.device&type=event";
+                paramsObj.method = 'GET';
+                paramsObj.addHeader("Connection","Keep-Alive");
+                paramsObj.addHeader("Content-Type", "multipart");
+
+                intel.xdk.device.getRemoteDataExt(paramsObj);
+
+                document.addEventListener('intel.xdk.device.remote.data', function(e){
+                    if(e.success == false){
+                        alert("error: " + e.error);
+                    }
+                    else{
+                        alert("success: " + e.response);
+                    }
+                },false);
+            }
+
+            //Test for javascript interface "intel.xdk.device.blockRemotePage()".
+            function blockRemotePage(){
+                var whitelist = "www.baidu.com";
+                intel.xdk.device.blockRemotePages(true, whitelist);
+            }
+
+            //Test for event "intel.xdk.device.orientation.change".
+            //function onOrientationChanged(){
+                document.addEventListener('intel.xdk.device.orientation.change', function(e){
+                    alert("orientation changes to " + e.orientation);
+                }, false);
+                //}
+
+            //Test for javascript interface "intel.xdk.device.copyToClipboard()".
+            function copyToClipboard(text){
+                intel.xdk.device.copyToClipboard(text);
+            }
+
+            //Test for event "intel.xdk.device.continue".
+            function onContinue(){
+                document.addEventListener('intel.xdk.device.continue', function(){
+                    alert("Screen is unlocked now!");
+                }, false);
+            }
+
+            //Test for event "intel.xdk.device.pause".
+            function onPause(){
+                document.addEventListener('intel.xdk.device.pause', function(){
+                    alert('Screen is lock now!');
+                }, false);
+            }
+
+            //Test for javascript interface intel.xdk.device.addRemoteScript().
+            function addRemoteScript(){
+                //Replace the URL with your own remote script url.
+                var URL = 'http://localhost:8080/remotescript/remote.js';
+
+                function success(data){
+                    alert('Script file load successfully, data status: ' + data.status);
+                }
+
+                function error(data){
+                    alert('data status: ' + data.status);
+                }
+
+                intel.xdk.device.addRemoteScript(URL, success, error);
+            }
+        </script>
+    </body>
+</html>
