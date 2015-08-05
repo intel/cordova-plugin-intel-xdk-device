@@ -114,7 +114,7 @@ and limitations under the License
 
             //Dispatch event 'intel.xdk.device.init'.
             proxy.createAndDispatchEvent('intel.xdk.device.init');
-            /*success(
+            success(
                 {
                     connection: proxy.getConnection(),
                     hasCaching: false,
@@ -129,7 +129,7 @@ and limitations under the License
                     orientation: proxy.getOrientation(),
                     queryString: ''
                 }
-            );*/
+            );
         },
 
         addRemoteScript: function(success, fail, args) {
