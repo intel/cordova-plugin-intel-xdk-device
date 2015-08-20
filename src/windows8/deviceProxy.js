@@ -1,3 +1,4 @@
+
 /*
 Copyright 2015 Intel Corporation
 
@@ -111,25 +112,21 @@ and limitations under the License
                     proxy.createAndDispatchEvent('intel.xdk.device.orientation.change', { orientation: currentOrientation });
                 });
 
-
             //Dispatch event 'intel.xdk.device.init'.
-            proxy.createAndDispatchEvent('intel.xdk.device.init');
-            success(
-                {
-                    connection: proxy.getConnection(),
-                    hasCaching: false,
-                    hasStreaming: false,
-                    lastStation: null,
-                    phonegapversion: cordova.version,
-                    model: 'Model information is not available in windows store app.',
-                    osversion: '8',
-                    uuid: 'Serial number is not available in windows store app.',
-                    platform: 'windows8',
-                    initialOrientation: proxy.getOrientation(),
-                    orientation: proxy.getOrientation(),
-                    queryString: ''
-                }
-            );
+            proxy.createAndDispatchEvent('intel.xdk.device.init', {
+                connection: proxy.getConnection(),
+                hasCaching: false,
+                hasStreaming: false,
+                lastStation: null,
+                phonegapversion: cordova.version,
+                model: 'Model information is not available in windows store app.',
+                osversion: '8',
+                uuid: 'Serial number is not available in windows store app.',
+                platform: 'windows8',
+                initialOrientation: proxy.getOrientation(),
+                orientation: proxy.getOrientation(),
+                queryString: ''
+            });
         },
 
         addRemoteScript: function(success, fail, args) {
@@ -290,13 +287,13 @@ and limitations under the License
 
         blockRemotePages: function() {
             //var dialog = new Windows.UI.Popups.MessageDialog('intel.xdk.device.blockRemotePages is not supported in windows8.');
-            //dialog.showAsync();		
+            //dialog.showAsync();       
             deviceProxy.createAndDispatchEvent('intel.xdk.device.hideStatusBar', { success: false, message: "intel.xdk.device.hideStatusBar is not supported in windows8." });
         },
 
         runInstallNativeApp: function() {
             //var dialog = new Windows.UI.Popups.MessageDialog('intel.xdk.device.runInstallNativeApp is not supported in windows8.');
-            //dialog.showAsync();			
+            //dialog.showAsync();           
             deviceProxy.createAndDispatchEvent('intel.xdk.device.hideStatusBar', { success: false, message: "intel.xdk.device.hideStatusBar is not supported in windows8." });
         },
 
@@ -378,7 +375,7 @@ and limitations under the License
 
         setBasicAuthentication: function() {
             //var dialog = new Windows.UI.Popups.MessageDialog('intel.xdk.device.setBasicAuthentication is not supported in windows8.');
-            //dialog.showAsync();		
+            //dialog.showAsync();       
             deviceProxy.createAndDispatchEvent('intel.xdk.device.setBasicAuthentication', { success: false, message: "intel.xdk.device.setBasicAuthentication is not supported in windows8." });
         },
 
@@ -537,7 +534,7 @@ and limitations under the License
             }
         },
 
-        createAndDispatchEvent: function(name, properties) {
+        createAndDispatchEvent: function (name, properties) {
             var e = document.createEvent('Events');
             e.initEvent(name, true, true);
             if (typeof properties === 'object') {
@@ -548,7 +545,7 @@ and limitations under the License
             document.dispatchEvent(e);
         },
 
-        getRemoteDataProxy: function(url, requestMethod, requestBody, uuid, successCallback, errorCallback, headers) {
+        getRemoteDataProxy: function (url, requestMethod, requestBody, uuid, successCallback, errorCallback, headers) {
             if (uuid) {
                 requestBody += ('&uuid=' + uuid);
             }
