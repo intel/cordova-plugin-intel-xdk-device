@@ -326,7 +326,7 @@ public class Device extends CordovaPlugin {
         }
         
         if(orientationChanged){
-          String js = "javascript:intel.xdk.device.orientation='" + displayOrientation +"';var e = document.createEvent('Events');e.initEvent('intel.xdk.device.orientation.change', true, true);e.success=true;e.orientation='" + displayOrientation + "';document.dispatchEvent(e);";
+          String js = "javascript:try{intel.xdk.device.orientation='" + displayOrientation +"';}catch(e){}var e = document.createEvent('Events');e.initEvent('intel.xdk.device.orientation.change', true, true);e.success=true;e.orientation='" + displayOrientation + "';document.dispatchEvent(e);";
           injectJS(js);
         }
         
@@ -1265,7 +1265,7 @@ public class Device extends CordovaPlugin {
   
   public void updateConnection(){
     String currentConnection = getConnection();
-    String connectionType = "javascript: intel.xdk.device.connection =  \"" + currentConnection + "\";var e =document.createEvent('Events');e.initEvent('intel.xdk.device.connection.update',true,true);document.dispatchEvent(e);";
+    String connectionType = "javascript: try{intel.xdk.device.connection =  \"" + currentConnection + "\";}catch(e){}var e =document.createEvent('Events');e.initEvent('intel.xdk.device.connection.update',true,true);document.dispatchEvent(e);";
     injectJS(connectionType);
   }
   
