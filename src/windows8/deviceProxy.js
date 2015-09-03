@@ -471,7 +471,7 @@ and limitations under the License
             //Set close image.
             if (!deviceProxy.closeImage) {
                 deviceProxy.closeImage = new Image();
-                deviceProxy.closeImage.src = '../plugins/com.intel.xdk.device/remote_close.png';
+                deviceProxy.closeImage.src = '../plugins/intel.xdk.device/remote_close.png';
                 deviceProxy.closeImage.id = 'closeimage';
             }
 
