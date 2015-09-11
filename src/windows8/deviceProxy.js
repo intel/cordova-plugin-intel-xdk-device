@@ -250,19 +250,21 @@ and limitations under the License
                     //e.response = responseString;
                     //e.extras = statusExtra;
                     //document.dispatchEvent(e);
+                    proxy.createAndDispatchEvent('intel.xdk.device.remote.data', { id: id, success: true, response: responseString, extras: statusExtra });
                     success({ success: true, id: id, response: responseString, extras: statusExtra });
 
                 }, function (e) {
                     e = e.response;
 
-                    var ev = document.createEvent('Events');
-                    ev.initEvent('intel.xdk.device.remote.data', true, true);
-                    ev.success = false;
-                    ev.id = id;
-                    ev.response = '';
-                    ev.extras = {};
-                    ev.error = e;
-                    document.dispatchEvent(ev);
+                    //var ev = document.createEvent('Events');
+                    //ev.initEvent('intel.xdk.device.remote.data', true, true);
+                    //ev.success = false;
+                    //ev.id = id;
+                    //ev.response = '';
+                    //ev.extras = {};
+                    //ev.error = e;
+                    //document.dispatchEvent(ev);
+                    proxy.createAndDispatchEvent('intel.xdk.device.remote.data', { id: id, success: false, response: "", extras: {}, error: e });
 
                 }, function progress(data) {
 
