@@ -168,7 +168,7 @@ and limitations under the License
 
             var getRemoteDataProxy = deviceProxy.getRemoteDataProxy;
 
-            getRemoteDataProxy(url, requestMethod, requestBody, null, success, fail);
+            getRemoteDataProxy(url, requestMethod, requestBody, null, successCallback, errorCallback);
         },
 
         getRemoteDataWithID: function(success, fail, args) {
@@ -182,7 +182,7 @@ and limitations under the License
 
             var getRemoteDataProxy = deviceProxy.getRemoteDataProxy;
 
-            getRemoteDataProxy(url, requestMethod, requestBody, id, success, fail);
+            getRemoteDataProxy(url, requestMethod, requestBody, id, successCallback, errorCallback);
         },
 
         getRemoteDataExt: function (success, fail, args) {
@@ -298,7 +298,25 @@ and limitations under the License
         },
 
         scanBarcode: function() {
-            //TO DO
+            cordova.plugins.barcodeScanner.scan(
+                    function (result) {
+                        var format = "QR_CODE";
+                        var e = document.createEvent('Events');
+                        e.initEvent('intel.xdk.device.barcode.scan', true, true);
+                        e.success = true;
+                        e.codetype = format;
+                        e.codedata = result;
+                        document.dispatchEvent(e);
+
+                        //errorPopup("We got a barcode\n" +
+                        //      "Result: " + result.text + "\n" +
+                        //      "Format: " + result.format + "\n" +
+                        //      "Cancelled: " + result.cancelled);
+                    },
+                    function (error) {
+                        errorPopup("Scanning failed: " + error);
+                    }
+                 );
         },
 
         sendEmail: function(success, fail, args) {
@@ -419,10 +437,10 @@ and limitations under the License
 
         showRemoteSite: function(success, fail, args) {
             var url = args[0];
-            var closeImageX = args[1];
-            var closeImageY = args[2];
-            var closeImageWidth = args[3];
-            var closeImageHeight = args[4];
+            var closeImageX = (args[1] == null) ? 48 : args[1];
+            var closeImageY = (args[2] == null) ? 48 : args[2];
+            var closeImageWidth = (args[3] == null) ? 48 : args[3];
+            var closeImageHeight = (args[4] == null) ? 48 : args[4];
 
             var proxy = deviceProxy;
             deviceProxy.showRS(url, closeImageX, closeImageY, closeImageX, closeImageY, closeImageWidth, closeImageHeight);
@@ -430,12 +448,12 @@ and limitations under the License
 
         showRemoteSiteExt: function(success, fail, args) {
             var url = args[0];
-            var closeImagePortraitX = args[1];
-            var closeImagePortraitY = args[2];
-            var closeImageLandscapeX = args[3];
-            var closeImageLandscapeY = args[4];
-            var closeImageWidth = args[5];
-            var closeImageHeight = args[6];
+            var closeImagePortraitX = (args[1] == null) ? 48 : args[1];
+            var closeImagePortraitY = (args[2] == null) ? 48 : args[2];
+            var closeImageLandscapeX = (args[3] == null) ? 48 : args[3];
+            var closeImageLandscapeY = (args[4] == null) ? 48 : args[4];
+            var closeImageWidth = (args[5] == null) ? 55 : args[5];
+            var closeImageHeight = (args[6] == null) ? 55 : args[6];
 
             var proxy = deviceProxy;
             proxy.showRS(url, closeImagePortraitX, closeImagePortraitY, closeImageLandscapeX, closeImageLandscapeY, closeImageWidth, closeImageHeight);
@@ -465,20 +483,25 @@ and limitations under the License
             webview.style.top = '0px';
             webview.style.left = '0px';
             webview.style.zIndex = 1002;
-            webview.src = url;
+
+            //webview.src = url;
+            webview.navigate(url);
+
             document.body.appendChild(webview);
 
             //Set close image.
             if (!deviceProxy.closeImage) {
                 deviceProxy.closeImage = new Image();
-                deviceProxy.closeImage.src = '../plugins/intel.xdk.device/remote_close.png';
+                deviceProxy.closeImage.src = '../../plugins/intel.xdk.device/remote_close.png';
                 deviceProxy.closeImage.id = 'closeimage';
             }
 
             deviceProxy.closeImage.style.zIndex = 1003;
             deviceProxy.closeImage.style.position = 'fixed';
-            deviceProxy.closeImage.style.left = closeImageX;
-            deviceProxy.closeImage.style.top = closeImageY;
+            deviceProxy.closeImage.style.left = closeImageX + "px";
+            deviceProxy.closeImage.style.top = closeImageY + "px";
+            deviceProxy.closeImage.style.height = closeImageHeight + "px";
+            deviceProxy.closeImage.style.width = closeImageWidth + "px";
             document.body.appendChild(deviceProxy.closeImage);
 
             deviceProxy.closeImage.onclick = function(e) {
@@ -616,3 +639,4 @@ and limitations under the License
     };
 
     commandProxy.add('IntelXDKDevice', deviceProxy);
+
