@@ -15,5 +15,8 @@
 # -->
 # Release Notes
 
+### 1.1.25 (September 16, 2015)
+* Fixed compatibility with cordova-android 4.0+
+
 ### 1.1.12 (May 15, 2015)
 * Initial public release

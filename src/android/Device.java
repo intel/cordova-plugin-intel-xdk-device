@@ -28,12 +28,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaChromeClient;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
-import org.apache.cordova.CordovaWebViewClient;
-import org.apache.cordova.IceCreamCordovaWebViewClient;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -81,17 +78,21 @@ import android.telephony.TelephonyManager;
 import android.text.ClipboardManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AbsoluteLayout;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 
 /**
  * This class provides access to various features on the device.
@@ -120,7 +121,7 @@ public class Device extends CordovaPlugin {
   //Used in show remote site
   private AbsoluteLayout remoteLayout;
   ImageButton remoteClose;
-  private CordovaWebView remoteView;
+  private WebView remoteView;
   private boolean isShowingRemoteSite;
   static int remoteCloseXPort=0, remoteCloseYPort=0, remoteCloseXLand=0, remoteCloseYLand=0, remoteCloseH=0, remoteCloseW=0;
   
@@ -273,14 +274,18 @@ public class Device extends CordovaPlugin {
         //add the close button
         remoteLayout.addView(remoteClose);
         
-        final LinearLayout root = (LinearLayout)webView.getParent();
+        final ViewGroup parent = (ViewGroup)webView.getView().getParent();
 
         activity.runOnUiThread(new Runnable() {
           public void run() {
             //hack for mobius
-            if(root != null) {
-            //add layout to activity root layout
-              root.addView(remoteLayout);
+            if (parent != null) {
+              //add layout to activity root layout
+              parent.addView(remoteLayout, new FrameLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      Gravity.CENTER));
+
             }
           }
         });
@@ -370,7 +375,7 @@ public class Device extends CordovaPlugin {
         //Listener to the back key down event
         
         WebViewKeyListener webViewListener = new WebViewKeyListener(webView);
-        webView.setOnKeyListener(webViewListener);
+        webView.getView().setOnKeyListener(webViewListener);
         
         
         // Wait this many milliseconds max for the TCP connection to be established
@@ -1157,39 +1162,22 @@ public class Device extends CordovaPlugin {
     public void run() {
 
       if (remoteView == null) {
-        remoteView = new CordovaWebView(activity);
 
-        // Set WebwiewClient
-        Method m1;
-        try {
-          m1 = remoteView.getClass().getMethod("setWebViewClient", CordovaWebViewClient.class);
-          if (m1 != null) {
-            CordovaWebViewClient cwvc;
-            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
-              cwvc = new CordovaWebViewClient((CordovaInterface) activity, remoteView);
-            } else {
-              cwvc = new IceCreamCordovaWebViewClient((CordovaInterface) activity, remoteView);
-            }
-            m1.invoke(remoteView, cwvc);
-          }
-        } catch (Exception e) {
-          // TODO: should handle missing method for Crosswalk
-        }
-        
-        // Set WebChromeClient
-        Method m2;
-        try {
-          m1 = remoteView.getClass().getMethod( "setWebChromeClient", CordovaChromeClient.class);
-          if (m1 != null) {
-            CordovaChromeClient ccc = new CordovaChromeClient((CordovaInterface) activity, remoteView);;
-            m1.invoke(remoteView, ccc);
-          }
-        } catch (Exception e) {
-          // TODO: should handle missing method for Crosswalk
-        }
-        
-        remoteLayout.addView(remoteView);
-        
+        remoteView = new WebView(activity);
+        remoteView.setInitialScale(0);
+        remoteView.setVerticalScrollBarEnabled(false);
+        remoteView.setWebViewClient(new WebViewClient());
+        final WebSettings settings = remoteView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
+
+        remoteLayout.addView(remoteView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER));
+
+        remoteView.requestFocusFromTouch();
       }
       // load the url
       remoteView.loadUrl(strURL);
@@ -1200,21 +1188,6 @@ public class Device extends CordovaPlugin {
       // isShowingRemoteSite = true;
       // get focus
       remoteView.requestFocus(View.FOCUS_DOWN);
-      remoteView.setOnTouchListener(new View.OnTouchListener() {
-
-        public boolean onTouch(View v, MotionEvent event) {
-          switch (event.getAction()) {
-          case MotionEvent.ACTION_DOWN:
-          case MotionEvent.ACTION_UP:
-            if (!v.hasFocus()) {
-              v.requestFocus();
-            }
-            break;
-          }
-          return false;
-        }
-
-      });
       remoteClose.bringToFront();
     }
   });
@@ -1496,7 +1469,7 @@ public class Device extends CordovaPlugin {
         } catch (Exception e) 
         {
           // just log for now
-          Log.e("!!!WebView.loadUrl failed!!!", "", e);
+          Log.e("", "!!!WebView.loadUrl failed!!!", e);
         }
 
       }
