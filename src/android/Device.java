@@ -137,6 +137,8 @@ public class Device extends CordovaPlugin {
   private Method evaluateJavascript, sendJavascript;
   private ValueCallback emptyVC;
   
+  CordovaWebViewCompatibility compat;
+  
     /**
      * Constructor.
      */
@@ -235,13 +237,46 @@ public class Device extends CordovaPlugin {
     }
 
   }
-
+  
+  private class CordovaWebViewCompatibility {
+	  private Object thing;
+	  
+	  CordovaWebViewCompatibility(CordovaWebView cwv) {
+		  super();
+		  thing = cwv;
+		  
+		  try {
+			  Method getView = thing.getClass().getMethod("getView");
+			  thing = getView.invoke(thing, (Object[])null);
+		  } catch(Exception e){}
+	  }
+	  
+	  ViewGroup getParent() {
+		  ViewGroup parent = null;
+		  try {
+			  Method getParent = thing.getClass().getMethod("getParent");
+			  parent = (ViewGroup)getParent.invoke(thing, (Object[])null);
+		  } catch(Exception e){}
+		  return parent;
+	  }
+	  
+	  void setOnKeyListener(View.OnKeyListener kl) {
+		  try {
+			  Method setKeyListener = thing.getClass().getMethod("setKeyListener", View.OnKeyListener.class);
+			  thing = setKeyListener.invoke(thing, kl);
+		  } catch(Exception e){}
+	  }
+  }
+  
+  
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         
         this.activity = cordova.getActivity();
         this.webView = webView;
+
+        compat = new CordovaWebViewCompatibility(webView);
         
         //remote site support
         remoteLayout = new AbsoluteLayout(activity);
@@ -274,7 +309,7 @@ public class Device extends CordovaPlugin {
         //add the close button
         remoteLayout.addView(remoteClose);
         
-        final ViewGroup parent = (ViewGroup)webView.getView().getParent();
+        final ViewGroup parent = compat.getParent();
 
         activity.runOnUiThread(new Runnable() {
           public void run() {
@@ -375,7 +410,7 @@ public class Device extends CordovaPlugin {
         //Listener to the back key down event
         
         WebViewKeyListener webViewListener = new WebViewKeyListener(webView);
-        webView.getView().setOnKeyListener(webViewListener);
+        compat.setOnKeyListener(webViewListener);
         
         
         // Wait this many milliseconds max for the TCP connection to be established
