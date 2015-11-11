@@ -69,10 +69,6 @@ module.exports = {
 		exec(null, null, "IntelXDKDevice", "runInstallNativeApp", [appName, protocolHandler, appLocationURL, bundleID]);
 	},
 
-	scanBarcode : function(){
-		exec(null, null, "IntelXDKDevice", "scanBarcode", []);
-	},
-
 	sendEmail : function(bodyText, toString, subjectText, isHTML, ccString, bccString){
 		exec(null, null, "IntelXDKDevice", "sendEmail", [bodyText, toString, subjectText, isHTML, ccString, bccString]);
 	},

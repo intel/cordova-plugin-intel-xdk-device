@@ -517,8 +517,6 @@ public class Device extends CordovaPlugin {
           this.managePower(args.getBoolean(0), args.getBoolean(1));
         } else if(action.equals("runInstallNativeApp")){
           this.runInstallNativeApp(args.getString(0), args.getString(1), args.getString(2), args.getString(3));
-        } else if(action.equals("scanBarcode")){
-          this.scanBarcode();
         } else if(action.equals("sendEmail")) {
           this.sendEmail(args.getString(0), args.getString(1), args.getString(2), args.getBoolean(3), args.getString(4), args.getString(5));
         } else if(action.equals("sendSMS")){
@@ -1062,14 +1060,6 @@ public class Device extends CordovaPlugin {
     strStoreUrl = "";
   }
     
-    public void scanBarcode() {
-        //Intent intent = new Intent(activity.getResources().getString(R.string.qrcode_scan_action));
-      Intent intent = new Intent("com.intel.xdk.device.barcode.CAPTURE");
-        //intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-        //hack so activity wont stop
-        activity.startActivityForResult(intent, SCAN_QR_CODE);
-    } 
-    
     public void sendEmail(String body, String to, String subject, boolean ishtml, String cc, String bcc)
   {
     
@@ -1459,27 +1449,6 @@ public class Device extends CordovaPlugin {
           default : break;
       }
     }
-    
-    private void handleQRCodeResult(int resultCode, Intent intent) {
-      String remoteCloseEvent = null;
-        String contents = "";
-        String format = "";
-      if(intent!=null) {
-          contents = intent.getStringExtra("SCAN_RESULT");
-          format = intent.getStringExtra("SCAN_RESULT_FORMAT");
-      }
-        if (resultCode == Activity.RESULT_OK) {
-            // Handle successful scan
-        remoteCloseEvent = "javascript: var e =document.createEvent('Events');e.initEvent('intel.xdk.device.barcode.scan',true,true);e.success=true;e.codetype='"+format+"';e.codedata='"+contents+"';document.dispatchEvent(e);";
-//        } else if (resultCode == Activity.RESULT_CANCELED) {
-//            // Handle cancel
-//        remoteCloseEvent = "javascript: var e =document.createEvent('Events');e.initEvent('appMobi.device.barcode.scan',true,true);e.success=true;e.cancelled=true;e.codetype='';e.codedata='';document.dispatchEvent(e);";
-        } else {
-          //cancelled or failed
-        remoteCloseEvent = "javascript: var e =document.createEvent('Events');e.initEvent('intel.xdk.device.barcode.scan',true,true);e.success=false;e.codetype='';e.codedata='';document.dispatchEvent(e);";
-        }
-        injectJS(remoteCloseEvent);
-  }
     
   @TargetApi(19)
   private void injectJS(final String js) {
