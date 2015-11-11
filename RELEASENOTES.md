@@ -15,6 +15,9 @@
 # -->
 # Release Notes
 
+### 1.2.6 (November 11, 2015)
+* Removed the Barcode Scanning capablilities
+
 ### 1.1.25 (September 16, 2015)
 * Fixed compatibility with cordova-android 4.0+
 
