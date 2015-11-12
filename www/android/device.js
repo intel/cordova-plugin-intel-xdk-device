@@ -15,17 +15,4 @@ and limitations under the License
 var exec = require('cordova/exec');
 
 module.exports = {
-	scanBarcode : function(){
-		
-		var success = function(result){
-			
-		};
-		
-		var error = function(){
-			
-		};
-		
-
-		exec(success, error, "BarcodeScanner", "scan", []);
-	},
 };

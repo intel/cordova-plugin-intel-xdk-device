@@ -13,7 +13,6 @@ and limitations under the License
 */
 
 #import "XDKDevice.h"
-#import "CDVBarcodeScanner.h"
 #import <UIKit/UIKit.h>
 #import <MessageUI/MessageUI.h>
 #import <SystemConfiguration/SCNetworkReachability.h>
@@ -47,9 +46,6 @@ and limitations under the License
 
 //! Index of last-finished connection check.
 @property (nonatomic) NSUInteger lastFinishedConnectionCheck;
-
-//! Bar code scanner for active scanBarcode operation.
-@property (nonatomic) XDK_CDVbcsProcessor* barcodeProcessor;
 
 @end
 
@@ -378,48 +374,6 @@ and limitations under the License
              success(response, body);
          }
      }];
-}
-
-
-#pragma mark Bar Codes
-
-- (void) scanBarcode:(CDVInvokedUrlCommand*)command
-{
-    self.barcodeProcessor =  [[XDK_CDVbcsProcessor alloc]
-                              initWithParentViewController:self.viewController
-                              delegate:self];
-    [self.barcodeProcessor scanBarcode];
-}
-
-
-- (void)barcodeScanSucceeded:(NSString *)text
-                      format:(NSString *)format
-{
-    [self fireEvent:@"device.barcode.scan"
-            success:YES
-         components:@{ @"codetype": quotedString(format),
-                       @"codedata": quotedString(text) }];
-    self.barcodeProcessor = nil; // release
-}
-
-
-- (void)barcodeScanFailed:(NSString *)message
-{
-    [self fireEvent:@"device.barcode.scan"
-            success:NO
-         components:@{ @"codetype": @"''",
-                       @"codedata": @"''" }];
-    self.barcodeProcessor = nil; // release
-}
-
-
-- (void)barcodeScanCancelled
-{
-    [self fireEvent:@"device.barcode.scan"
-            success:NO
-         components:@{ @"codetype": @"''",
-                       @"codedata": @"''" }];
-    self.barcodeProcessor = nil; // release
 }
 
 
