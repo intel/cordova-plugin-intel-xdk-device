@@ -41,8 +41,6 @@ below for more information on events thrown by the device object.
     device's hardware "back" button.
 -   [runInstallNativeApp](#runinstallnativeapp) — Run or install a native app on 
     the device
--   [scanBarcode](#scanbarcode) — This method will open a full-screen QR code 
-    reader in an application
 -   [sendEmail](#sendemail) — This method will open an email view to send an 
     email without exiting the application
 -   [sendSMS](#sendsms) — This method will send an SMS message
