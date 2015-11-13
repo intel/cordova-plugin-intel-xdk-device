@@ -112,8 +112,6 @@ public class Device extends CordovaPlugin {
     
     private String strStoreUrl;
     
-    private final static int SCAN_QR_CODE = 0;
-    
     private boolean shouldAutoRotate = true;
   private String rotateOrientation = "";
   
@@ -1440,15 +1438,6 @@ public class Device extends CordovaPlugin {
     }
     return id;
   }
-    
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent intent){
-      switch(requestCode){
-        case SCAN_QR_CODE : handleQRCodeResult(resultCode, intent);
-            break;
-          default : break;
-      }
-    }
     
   @TargetApi(19)
   private void injectJS(final String js) {

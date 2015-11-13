@@ -25,7 +25,6 @@ and limitations under the License
 @interface XDKDevice () < MFMailComposeViewControllerDelegate
                         , MFMessageComposeViewControllerDelegate
                         , UIAlertViewDelegate
-                        , XDK_CDVbcsProcessorDelegate
                         >
 
 //! Web view created for showRemoteSite.

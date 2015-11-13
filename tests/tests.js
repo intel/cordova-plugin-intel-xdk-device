@@ -261,17 +261,6 @@ exports.defineAutoTests = function(){
             });
         });
 
-        describe('scanBarcode', function () {
-            it('is defined and it is a function', function () {
-                expect( intel.xdk.device.scanBarcode ).toBeDefined();
-                expect( typeof intel.xdk.device.scanBarcode ).toEqual('function');
-            });
-
-            //it('Is scanBarcode called with objects and correct value', function () {
-            //    intel.xdk.device.scanBarcode();
-            //});
-        });
-
         describe('sendEmail', function () {
             it('is defined and it is a function', function () {
                 expect( intel.xdk.device.sendEmail ).toBeDefined();
@@ -397,11 +386,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
     
     function init() {
-        document.addEventListener('intel.xdk.device.barcode.scan', function(e){
-            console.log('event:',e.type);
-            console.log(e.success? e.codedata : 'fail');
-        });
-        
         document.addEventListener('intel.xdk.device.remote.data', function(e){
             console.log('event:',e.type);
             console.log(e.success? 'response: '+ e.response : 'error:' + e.error);
@@ -464,10 +448,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         
         '<h3>Manage Power</h3>' +
         '<div id="buttonManagePower"></div>' +
-        'Expected result: ' +
-        
-        '<h3>Scan Bar Code</h3>' +
-        '<div id="buttonScanBarCode"></div>' +
         'Expected result: ' +
         
         '<h3>Send Email</h3>' +
@@ -572,11 +552,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         console.log('executing', 'intel.xdk.device.managePower');
         intel.xdk.device.managePower(true, false);
     },'buttonManagePower');
-    
-    createActionButton('scanBarCode()',function(){
-        console.log('executing', 'intel.xdk.device.scanBarCode');
-        intel.xdk.device.scanBarcode();
-    },'buttonScanBarCode');
     
     createActionButton('sendEmail()',function(){
         console.log('executing', 'intel.xdk.device.sendEmail');

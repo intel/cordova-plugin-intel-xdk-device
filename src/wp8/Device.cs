@@ -569,42 +569,6 @@ namespace Cordova.Extension.Commands
             });
         }
 
-        public void scanBarcode(string parameters)
-        {
-
-                Deployment.Current.Dispatcher.BeginInvoke(() =>
-                {
-                    if (page != null)
-                    {
-                        Grid grid = page.FindName("LayoutRoot") as Grid;
-                        if (grid != null)
-                        {
-                            barCodecontrol = new BarCodeControl();
-
-                            PageOrientation po = ((PhoneApplicationFrame)(Application.Current.RootVisual)).Orientation;
-                            if (po == PageOrientation.Landscape || po == PageOrientation.LandscapeLeft || po == PageOrientation.LandscapeRight)
-                            {
-                                barCodecontrol.Height = Application.Current.Host.Content.ActualWidth;
-                                barCodecontrol.Width = Application.Current.Host.Content.ActualHeight;
-                            } else {
-                                barCodecontrol.Height = Application.Current.Host.Content.ActualHeight;
-                                barCodecontrol.Width = Application.Current.Host.Content.ActualWidth;
-                            }
-                            //barCodecontrol.viewFeed.Height = Application.Current.Host.Content.ActualHeight;
-                            //barCodecontrol.viewFeed.Width = Application.Current.Host.Content.ActualWidth;
-
-                            grid.Children.Add(barCodecontrol);
-
-                            barCodecontrol.ReadComplete += barCodecontrol_Completed;
-                        }
-                    }
-                    else
-                    {
-                    }
-                });
-
-        }
-
         public void closeRemoteSite(string parameters)
         {
             this.close();

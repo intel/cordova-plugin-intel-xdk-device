@@ -31,7 +31,6 @@ and limitations under the License
             <br>
             <button onclick="intel.xdk.device.init();">Init - should happen automatically</button>
             <button onclick="intel.xdk.device.managePower(true, false)">managePower</button>
-            <button onclick="intel.xdk.device.scanBarcode()">scanBarcode</button>
             <button onclick="showRemoteSite()">showRemoteSite</button>
             <button onclick="addVirtualPage()">addVirtualPage</button>
         </div> -->
@@ -55,7 +54,6 @@ and limitations under the License
         <button onclick="launchExternal(Url);">launchExternal</button>
         <button onclick="managePower(true, false);">managePower</button>
         <!--<button onclick="runInstallNativeApp();">runInstallNativeApp</button>-->
-        <button onclick="scanBarcode();">scanBarcode</button>
         <button onclick="sendEmail();">sendEmail</button>
         <button onclick="sendSMS();">sendSMS</button>
         <button onclick="setAutoRotate(true)">setAutoRotate(true)</button>
@@ -152,23 +150,6 @@ and limitations under the License
             function runInstallNativeApp(){
                 intel.xdk.device.runInstallNativeApp('playmous', 'applab.playmous://', 'market://details?id=com.playmous.ttf', 'com.playmous.ttf');
             }
-
-            //Test for javascript interface "intel.xdk.device.scanBarcode()".
-            function scanBarcode(){
-                intel.xdk.device.scanBarcode();
-            }
-
-            //Test for event intel.xdk.device.barcode.scan.
-            (function(){
-                document.addEventListener('intel.xdk.device.barcode.scan', function(e){
-                    if(e.success == true){
-                        alert(e.codedata);
-                    }
-                    else{
-                        alert('Scanning failure.');
-                    }
-                });
-            })();
 
             //Test for javascript interface "intel.xdk.device.sendEmail()".
             function sendEmail(){

@@ -86,8 +86,6 @@ below for more information on events thrown by the device object.
 
 ### Events
 
--   [intel.xdk.device.barcode.scan](#barcode.scan) — This event is fired once 
-    the barcode reader command has finished doing its job
 -   [intel.xdk.device.connection.update](#connection.update) — This event is 
     fired in response to the 
     [intel.xdk.device.updateConnection](#updateconnection) command to indicate
@@ -839,57 +837,6 @@ if (intel.xdk.device.platform=="Android")
    }
 ```
 
-### scanBarcode
-
-This method will open a full-screen QR code reader in an application
-
-```javascript
-intel.xdk.device.scanBarcode();
-```
-
-#### Description
-
-This function will open a full-scren 
-[QR code](http://en.wikipedia.org/wiki/QR_code) reader in an application. Once
-it successfully reads a QR code, or the reader is cancelled, the 
-[intel.xdk.device.barcode.scan](#barcodescan) event is called.
-
-#### Platforms
-
--   Apple iOS
--   Google Android
-
-#### Events
-
--   **[intel.xdk.device.barcode.scan](#barcodescan):** The
-[intel.xdk.device.barcode.scan](#barcodescan) event is called once the QR code
-reader successfully reads a code or once it is cancelled.
-
-#### Example
-
-```javascript
-document.addEventListener("intel.xdk.device.barcode.scan",function(evt){
-    intel.xdk.notification.beep(1);
-    if (evt.success == true) {
-        //successful scan
-        console.log(evt.codedata);
-
-        if (evt.codedata == "http://www.sampleurl.com/fake.html")
-        {
-                //in the XDK
-        }
-        else
-        {
-                alert(evt.codedata);
-        }
-    } else {
-        //failed scan
-        console.log("failed scan");
-    }
-},false);
-intel.xdk.device.scanBarcode();
-```
-
 ### sendEmail
 
 This method will open an email view to send an email without exiting the 
@@ -1517,41 +1464,6 @@ alert(intel.xdk.device.uuid);
 
 Events
 ------
-
-### barcode.scan
-
-This event is fired once the barcode reader command has finished doing its job
-
-#### Description
-
-The [intel.xdk.device.barcode.scan](#barcodescan)
-is called once the QR code reader successfully reads a code or once it is
-cancelled. The event returned with this event contains the following parameters:
-
-|Parameter	|Value|
-|-----------|-----|
-|Type	    |always returns "intel.xdk.device.barcode.scan"|
-|success	|true or false depending on whether a QR code was successfully captured or not.|
-|codedata   |On a successful read, the data embedded in the QR code will be returned here.|
-
-#### Example
-
-```javascript
-document.addEventListener("intel.xdk.device.barcode.scan", 
-    barcodeScanned, false);
-function barcodeScanned(evt) {
-    intel.xdk.notification.beep(1);
-    if (evt.type == "intel.xdk.device.barcode.scan") {
-        if (evt.success == true) {
-            var url = evt.codedata;
-            intel.xdk.device.showRemoteSite(url, 264, 0,56, 48)
-        } else {
-          //scan cancelled
-        }
-    }
-}
-intel.xdk.device.scanBarcode();
-```
 
 ### connection.update
 

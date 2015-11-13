@@ -299,28 +299,6 @@ and limitations under the License
             deviceProxy.createAndDispatchEvent('intel.xdk.device.hideStatusBar', { success: false, message: "intel.xdk.device.hideStatusBar is not supported in windows8." });
         },
 
-        scanBarcode: function() {
-            cordova.plugins.barcodeScanner.scan(
-                    function (result) {
-                        var format = "QR_CODE";
-                        var e = document.createEvent('Events');
-                        e.initEvent('intel.xdk.device.barcode.scan', true, true);
-                        e.success = true;
-                        e.codetype = format;
-                        e.codedata = result;
-                        document.dispatchEvent(e);
-
-                        //errorPopup("We got a barcode\n" +
-                        //      "Result: " + result.text + "\n" +
-                        //      "Format: " + result.format + "\n" +
-                        //      "Cancelled: " + result.cancelled);
-                    },
-                    function (error) {
-                        errorPopup("Scanning failed: " + error);
-                    }
-                 );
-        },
-
         sendEmail: function(success, fail, args) {
             var bodyText = args[0];
             var toString = args[1];
