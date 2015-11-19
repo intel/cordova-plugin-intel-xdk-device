@@ -151,62 +151,6 @@ public class Device extends CordovaPlugin {
             this.webView = webView;
         }
 
-        private boolean webViewCanGoBack() {
-            //handle WebView
-            try {
-                Method canGoBack = webView.getClass().getMethod("canGoBack");
-                if (canGoBack != null) {
-                    return (Boolean) canGoBack.invoke(webView, (Object[]) null);
-                }
-            } catch (Exception e) {
-            }
-
-            //handle CrosswalkView
-            try {
-                Method getNavigationHistory = webView.getClass().getMethod("getNavigationHistory");
-                if (getNavigationHistory != null) {
-                    Object navHistory = getNavigationHistory.invoke(webView, (Object[]) null);
-                    Method canGoBack = navHistory.getClass().getMethod("canGoBack");
-                    return (Boolean) canGoBack.invoke(navHistory, (Object[]) null);
-                }
-            } catch (Exception e) {
-            }
-
-            return false;
-        }
-
-        private void webViewGoBack() {
-            //handle WebView
-            try {
-                Method goBack = webView.getClass().getMethod("goBack");
-                goBack.invoke(webView);
-                return;
-            } catch (Exception e) {
-            }
-
-            //handle CrosswalkView
-            try {
-                Method getNavigationHistory = webView.getClass().getMethod("getNavigationHistory");
-                if (getNavigationHistory != null) {
-                    //get XWalkNavigationHistory ref
-                    Object navHistory = getNavigationHistory.invoke(webView, (Object[]) null);
-
-                    //get XWalkNavigationHistory.Direction ref
-                    Class direction = Class.forName(navHistory.getClass().getName() + "$Direction");
-
-                    //get XWalkNavigationHistory.Direction.BACKWARD ref
-                    Enum backward = Enum.valueOf(direction, "BACKWARD");
-
-                    //get reference to XWalkNavigationHistory.navigate
-                    Method navigate = navHistory.getClass().getMethod("navigate", direction, int.class);
-                    //invoke XWalkNavigationHistory.navigate(XWalkNavigationHistory.Direction.BACKWARD, 1)
-                    navigate.invoke(navHistory, backward, 1);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
         @Override
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() != KeyEvent.ACTION_DOWN) {
@@ -217,9 +161,6 @@ public class Device extends CordovaPlugin {
                     } else if (virtualPagesCount > 0) {
                         virtualPagesCount--;
                         injectJS("javascript:var ev = document.createEvent('Events');ev.initEvent('intel.xdk.device.hardware.back',true,true);document.dispatchEvent(ev);");
-                        return true;
-                    } else if (webViewCanGoBack()) {
-                        webViewGoBack();
                         return true;
                     } else {
                         // Prepare to move back to home.
