@@ -19,6 +19,11 @@ var channel = require('cordova/channel');
 var utils = require('cordova/utils');
 var cordova = require('cordova');
 
+var moduleUtil = {
+	virtualPageCount: 0,
+	virtualPageBackButtonHandler: null
+}
+
 /**
  * Provides access to the various notification features on the device.
  */
@@ -110,11 +115,28 @@ module.exports = {
 	},
 
 	addVirtualPage : function(){
-		exec(null, null, "IntelXDKDevice", "addVirtualPage", []);
+		//add cordova backbutton listener if counter == 0
+		if(moduleUtil.virtualPageCount == 0) {
+			moduleUtil.virtualPageBackButtonHandler = function() {
+				me.removeVirtualPage();
+
+				var ev = document.createEvent('Events');
+				ev.initEvent('intel.xdk.device.hardware.back',true,true);
+				document.dispatchEvent(ev);
+			}
+			document.addEventListener('backbutton', moduleUtil.virtualPageBackButtonHandler, false);
+		}
+		//increment virtual page counter
+		moduleUtil.virtualPageCount++;	
 	},
 
 	removeVirtualPage : function(){
-		exec(null, null, "IntelXDKDevice", "removeVirtualPage", []);
+		//decrement virtual page counter		
+		moduleUtil.virtualPageCount--;
+		//remove cordova backbutton listener if counter == 0
+		if(moduleUtil.virtualPageCount<=0) {
+			document.removeEventListener('backbutton', moduleUtil.virtualPageBackButtonHandler, false);
+		}
 	},
 
 	copyToClipboard : function(text){

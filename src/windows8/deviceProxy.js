@@ -27,7 +27,6 @@ and limitations under the License
         shouldAutoRotate: false,
         orientationSensor: null,
         closeImage: null,
-        virtualPagesCount: 0,
         smsDevice: null,
         smsArgs: "",
 
@@ -277,14 +276,6 @@ and limitations under the License
             deviceProxy.createAndDispatchEvent('intel.xdk.device.hideStatusBar', { success: false, message: "intel.xdk.device.hideStatusBar is not supported in windows8." });
 
             success({ success: false, message: "intel.xdk.device.hideStatusBar is not supported in windows8." });
-        },
-
-        addVirtualPage: function() {
-            deviceProxy.virtualPagesCount++;
-        },
-
-        removeVirtualPage: function() {
-            deviceProxy.virtualPagesCount--;
         },
 
         blockRemotePages: function() {
