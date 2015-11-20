@@ -15,7 +15,10 @@
 # -->
 # Release Notes
 
-### 1.2.6 (November 11, 2015)
+### 2.0.1 (November 20, 2015)
+* Update virtualPage APIs to be JS-only, improve Android implementation
+
+### 2.0.0 (November 11, 2015)
 * Removed the Barcode Scanning capablilities
 
 ### 1.1.25 (September 16, 2015)
