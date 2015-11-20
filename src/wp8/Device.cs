@@ -63,7 +63,6 @@ namespace Cordova.Extension.Commands
         private static int closeImageHeight;
         private int displayOrientation;
 
-        private int virtualPagesCount = 0;
         private PageOrientation pageOrientation;
         private AppRequest appRequest;
         private AppConfigData configData;
@@ -314,14 +313,6 @@ namespace Cordova.Extension.Commands
             }
         }
 
-        public void addVirtualPage(string parameters)
-        {
-            virtualPagesCount++;
-        }
-        public void removeVirtualPage(string parameters)
-        {
-            virtualPagesCount--;
-        }
         public void launchExternal(String args)
         {
             var arguments = JsonHelper.Deserialize<string[]>(args);

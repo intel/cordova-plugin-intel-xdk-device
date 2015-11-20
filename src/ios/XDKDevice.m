@@ -617,12 +617,6 @@ closeButtonRectL:(CGRect)closeButtonRectL    // Landscape
 
 #pragma mark Android-only
 
-- (void) addVirtualPage:(CDVInvokedUrlCommand*)command
-{}
-
-- (void) removeVirtualPage:(CDVInvokedUrlCommand*)command
-{}
-
 - (void) setBasicAuthentication:(CDVInvokedUrlCommand*)command
 {}
 

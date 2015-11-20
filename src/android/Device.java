@@ -14,46 +14,6 @@ and limitations under the License
 
 package com.intel.xdk.device;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaInterface;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -94,6 +54,46 @@ import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.scheme.SocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 /**
  * This class provides access to various features on the device.
  */
@@ -109,13 +109,13 @@ public class Device extends CordovaPlugin {
 
     private WakeLock wl;
     private BroadcastReceiver batteryChangeReceiver;
+    private BroadcastReceiver screenStatusReceiver;
 
     private String strStoreUrl;
 
     private boolean shouldAutoRotate = true;
     private String rotateOrientation = "";
 
-    private BroadcastReceiver receiver;
     //Used in show remote site
     private AbsoluteLayout remoteLayout;
     ImageButton remoteClose;
@@ -127,15 +127,11 @@ public class Device extends CordovaPlugin {
     //Used in intel.xdk.orientation.change
     private String lastOrientation;
 
-    //Used in addVirtualPage()
-    private int virtualPagesCount;
-
     public DefaultHttpClient persistentHttpClient;
 
     private Method evaluateJavascript, sendJavascript;
     private ValueCallback emptyVC;
 
-    CordovaWebViewCompatibility compat;
 
     /**
      * Constructor.
@@ -143,82 +139,12 @@ public class Device extends CordovaPlugin {
     public Device() {
     }
 
-    //Listener used in addVirtualPage()
-    private class WebViewKeyListener implements View.OnKeyListener {
-        private CordovaWebView webView;
-
-        public WebViewKeyListener(CordovaWebView webView) {
-            this.webView = webView;
-        }
-
-        @Override
-        public boolean onKey(View v, int keyCode, KeyEvent event) {
-            if (event.getAction() != KeyEvent.ACTION_DOWN) {
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    if (isShowingRemoteSite) {
-                        remoteClose.performClick();
-                        return true;
-                    } else if (virtualPagesCount > 0) {
-                        virtualPagesCount--;
-                        injectJS("javascript:var ev = document.createEvent('Events');ev.initEvent('intel.xdk.device.hardware.back',true,true);document.dispatchEvent(ev);");
-                        return true;
-                    } else {
-                        // Prepare to move back to home.
-                        Device.this.activity.unregisterReceiver(receiver);
-                        return false;
-                        // activity.moveTaskToBack(true);
-                    }
-                }
-                return false;
-            } else {
-                return false;
-            }
-        }
-
-    }
-
-    private class CordovaWebViewCompatibility {
-        private Object thing;
-
-        CordovaWebViewCompatibility(CordovaWebView cwv) {
-            super();
-            thing = cwv;
-
-            try {
-                Method getView = thing.getClass().getMethod("getView");
-                thing = getView.invoke(thing, (Object[]) null);
-            } catch (Exception e) {
-            }
-        }
-
-        ViewGroup getParent() {
-            ViewGroup parent = null;
-            try {
-                Method getParent = thing.getClass().getMethod("getParent");
-                parent = (ViewGroup) getParent.invoke(thing, (Object[]) null);
-            } catch (Exception e) {
-            }
-            return parent;
-        }
-
-        void setOnKeyListener(View.OnKeyListener kl) {
-            try {
-                Method setKeyListener = thing.getClass().getMethod("setKeyListener", View.OnKeyListener.class);
-                thing = setKeyListener.invoke(thing, kl);
-            } catch (Exception e) {
-            }
-        }
-    }
-
-
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         super.initialize(cordova, webView);
 
         this.activity = cordova.getActivity();
         this.webView = webView;
-
-        compat = new CordovaWebViewCompatibility(webView);
 
         //remote site support
         remoteLayout = new AbsoluteLayout(activity);
@@ -250,11 +176,9 @@ public class Device extends CordovaPlugin {
         //add the close button
         remoteLayout.addView(remoteClose);
 
-        final ViewGroup parent = compat.getParent();
-
+        final ViewGroup parent = (ViewGroup) webView.getEngine().getView().getParent();
         activity.runOnUiThread(new Runnable() {
             public void run() {
-                //hack for mobius
                 if (parent != null) {
                     //add layout to activity root layout
                     parent.addView(remoteLayout, new FrameLayout.LayoutParams(
@@ -314,40 +238,7 @@ public class Device extends CordovaPlugin {
         };
 
         listener.enable();
-
-        //Listener to the screen unlock event.
-        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(Intent.ACTION_USER_PRESENT);
-
-        this.receiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                    Log.d("screen_on", "Screen is on.");
-                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                    Log.d("screen_lock", "Screen is off");
-                    String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.pause');e.success=true;document.dispatchEvent(e);";
-                    injectJS(js);
-                } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
-                    Log.d("user_present", "User is present.");
-                    String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.continue');e.success=true;document.dispatchEvent(e);";
-                    injectJS(js);
-                }
-
-            }
-
-        };
-
-        activity.registerReceiver(receiver, filter);
-
-        //Listener to the back key down event
-
-        WebViewKeyListener webViewListener = new WebViewKeyListener(webView);
-        compat.setOnKeyListener(webViewListener);
-
+        registerScreenStatusReceiver();
 
         // Wait this many milliseconds max for the TCP connection to be established
         final int CONNECTION_TIMEOUT = 60 * 1000;
@@ -473,10 +364,6 @@ public class Device extends CordovaPlugin {
             this.updateConnection();
         } else if (action.equals("mainViewExecute")) {
             this.mainViewExecute(args.getString(0));
-        } else if (action.equals("addVirtualPage")) {
-            this.addVirtualPage();
-        } else if (action.equals("removeVirtualPage")) {
-            this.removeVirtualPage();
         } else if (action.equals("copyToClipboard")) {
             this.copyToClipboard(args.getString(0));
         } else if (action.equals("initialize")) {
@@ -908,7 +795,7 @@ public class Device extends CordovaPlugin {
             wl.release();
             wl = null;
         }
-        //unregister the receiver
+        //unregister the batteryChangeReceiver
         if (batteryChangeReceiver != null) {
             activity.unregisterReceiver(batteryChangeReceiver);
             batteryChangeReceiver = null;
@@ -921,28 +808,7 @@ public class Device extends CordovaPlugin {
 
         //if onlyWhenPluggedIn is true, then we should monitor whether we are plugged in
         if (onlyWhenPluggedIn) {
-            batteryChangeReceiver =
-                    new BroadcastReceiver() {
-
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            int batteryStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                            boolean isCharging = batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING || batteryStatus == BatteryManager.BATTERY_STATUS_FULL;
-
-                            if (isCharging) {
-                                if (wl == null) {
-                                    aquireWakeLock();
-                                }
-                            } else {
-                                if (wl != null) {
-                                    wl.release();
-                                    wl = null;
-                                }
-                            }
-                        }
-
-                    };
-            activity.registerReceiver(batteryChangeReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            registerBatteryChangeReceiver();
             //otherwise, we should stay on all the time so get the wakeLock
         } else {
             aquireWakeLock();
@@ -1114,6 +980,18 @@ public class Device extends CordovaPlugin {
                             Gravity.CENTER));
 
                     remoteView.requestFocusFromTouch();
+
+                    remoteView.setOnKeyListener(new View.OnKeyListener() {
+                        @Override
+                        public boolean onKey(View v, int keyCode, KeyEvent event) {
+                            if (event.getAction() != KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK) {
+                                remoteClose.performClick();
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    });
                 }
                 // load the url
                 remoteView.loadUrl(strURL);
@@ -1149,6 +1027,15 @@ public class Device extends CordovaPlugin {
         Log.d("resume", "App is resumed.");
         String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.resume');e.success=true;document.dispatchEvent(e);";
         injectJS(js);
+
+        //re-register listeners if they had been previously registered
+        if(screenStatusReceiver != null) {
+            registerScreenStatusReceiver();
+        }
+        if(batteryChangeReceiver != null){
+            registerBatteryChangeReceiver();
+        }
+
     }
 
     @Override
@@ -1156,20 +1043,19 @@ public class Device extends CordovaPlugin {
         Log.d("suspend", "App is suspended.");
         String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.suspend');e.success=true;document.dispatchEvent(e);";
         injectJS(js);
+
+        //unregister listeners
+        if(screenStatusReceiver != null) {
+            activity.unregisterReceiver(screenStatusReceiver);
+        }
+        if(batteryChangeReceiver != null){
+            activity.unregisterReceiver(batteryChangeReceiver);
+        }
+
     }
 
     public void mainViewExecute(String js) {
         injectJS("javascript: " + js);
-    }
-
-    public void addVirtualPage() {
-        virtualPagesCount++;
-    }
-
-    public void removeVirtualPage() {
-        if (virtualPagesCount > 0) {
-            virtualPagesCount--;
-        }
     }
 
     public void updateConnection() {
@@ -1369,6 +1255,66 @@ public class Device extends CordovaPlugin {
             }
 
         });
+    }
+
+    private void registerScreenStatusReceiver() {
+
+        if(screenStatusReceiver == null) {
+            //Listener to the screen unlock event.
+
+            screenStatusReceiver = new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                        Log.d("screen_on", "Screen is on.");
+                    } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                        Log.d("screen_lock", "Screen is off");
+                        String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.pause');e.success=true;document.dispatchEvent(e);";
+                        injectJS(js);
+                    } else if (intent.getAction().equals(Intent.ACTION_USER_PRESENT)) {
+                        Log.d("user_present", "User is present.");
+                        String js = "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.continue');e.success=true;document.dispatchEvent(e);";
+                        injectJS(js);
+                    }
+
+                }
+
+            };
+        }
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        activity.registerReceiver(screenStatusReceiver, filter);
+    }
+
+    private void registerBatteryChangeReceiver() {
+
+        if(batteryChangeReceiver == null) {
+
+            batteryChangeReceiver = new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int batteryStatus = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                    boolean isCharging = batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING || batteryStatus == BatteryManager.BATTERY_STATUS_FULL;
+
+                    if (isCharging) {
+                        if (wl == null) {
+                            aquireWakeLock();
+                        }
+                    } else {
+                        if (wl != null) {
+                            wl.release();
+                            wl = null;
+                        }
+                    }
+                }
+
+            };
+        }
+
+        activity.registerReceiver(batteryChangeReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
 }
