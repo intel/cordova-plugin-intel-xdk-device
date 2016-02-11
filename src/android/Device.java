@@ -92,7 +92,6 @@ import java.net.URL;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * This class provides access to various features on the device.
@@ -1096,7 +1095,6 @@ public class Device extends CordovaPlugin {
         String phonegapversion = getPGVersion();
         String platform = getPlatform();
         String queryString = getQueryString();
-        String uuid = getUuid();
 
         //getLastStation() is to do.
         String lastStation = null;
@@ -1125,7 +1123,6 @@ public class Device extends CordovaPlugin {
         js += "intel.xdk.device.phonegapversion='" + phonegapversion + "';";
         js += "intel.xdk.device.platform='" + platform + "';";
         js += "intel.xdk.device.queryString='" + queryString + "';";
-        js += "intel.xdk.device.uuid='" + uuid + "';";
 
         js += "intel.xdk.device.hasCaching='" + hasCaching + "';";
         js += "intel.xdk.device.hasStreaming='" + hasStreaming + "';";
@@ -1187,49 +1184,6 @@ public class Device extends CordovaPlugin {
         } else {
             return "";
         }
-    }
-
-    private String getUuid() {
-        return getDeviceID();
-    }
-
-    //Helper function
-    private String getDeviceID() {
-        String id = ((TelephonyManager) activity.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-
-        if (id == null) {  // check for devices that do not have a Telephony Manager device id
-
-            if (Build.VERSION.SDK_INT > 8) { //Gingerbread and above
-
-                //the following uses relection to get android.os.Build.SERIAL to avoid having to build with Gingerbread
-                try {
-                    Field serial = android.os.Build.class.getField("SERIAL");
-                    id = (String) serial.get(android.os.Build.class);
-                    if (android.os.Build.UNKNOWN.equals(id)) id = "";
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    id = "";
-                }
-
-            } else {
-                id = Secure.getString(activity.getContentResolver(), Secure.ANDROID_ID);
-            }
-
-            if ("".equals(id) || "9774d56d682e549c".equals(id)) { // check for failure or devices affected by the "9774d56d682e549c" bug
-                final String USER_DATA = "device-id";
-                SharedPreferences prefs = activity.getSharedPreferences("_APPPREFS", Context.MODE_PRIVATE);
-                id = prefs.getString(USER_DATA, "0000");
-                if (id == "0000") {    // did not exist
-                    UUID uuid = UUID.randomUUID();
-                    id = uuid.toString();
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(USER_DATA, id);
-                    editor.commit();
-                }
-            }
-
-        }
-        return id;
     }
 
     @TargetApi(19)

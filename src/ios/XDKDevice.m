@@ -635,7 +635,6 @@ closeButtonRectL:(CGRect)closeButtonRectL    // Landscape
     [script appendFormat:@"intel.xdk.device.orientation=%@;", [self getOrientation]];
     [script appendFormat:@"intel.xdk.device.osversion=%@;", quotedString(device.systemVersion)];
     [script appendFormat:@"intel.xdk.device.platform=%@;", quotedString(@"iOS")];
-    [script appendFormat:@"intel.xdk.device.uuid=%@;", quotedString([self getUUID])];
     
     [script appendFormat:@"intel.xdk.device.hasCaching=%@;", @"false"];
     [script appendFormat:@"intel.xdk.device.hasStreaming=%@;", @"false"];
@@ -658,41 +657,6 @@ closeButtonRectL:(CGRect)closeButtonRectL    // Landscape
         default:                                        return nil;
 	}
 }
-
-- (NSString*) getUUID
-{
-	//make it static so that assignment will persist for session
-    static NSString *uniqueIdValue = nil;
-    
-	if(uniqueIdValue==nil) {
-        UIDevice *device = [UIDevice currentDevice];
-        
-		BOOL isOS6 = [device.systemVersion floatValue] >= 6.0;
-		if (isOS6) {
-			uniqueIdValue = [device.identifierForVendor UUIDString];
-		}
-        else {
-			//before iOS6 use CFUUIDCreate along with NSUserDefaults
-			NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-			NSString *uniqueIdKey = @"uniqueIdentifierForDevice";
-			uniqueIdValue = [defaults objectForKey:uniqueIdKey];
-			
-			//first try to retrieve from NSUserDefaults
-			if(uniqueIdValue==nil) {
-				//if it wasn't in NSUserDefaults get it,
-				//then store it in NSUserDefaults for next time
-				CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-				uniqueIdValue = (__bridge_transfer NSString *)
-                CFUUIDCreateString(kCFAllocatorDefault, uuid);
-				CFRelease(uuid);
-				[defaults setObject:uniqueIdValue forKey:uniqueIdKey];
-				[defaults synchronize];
-			}
-		}
-	}
-    return uniqueIdValue;
-}
-
 
 #pragma mark - Utility methods
 

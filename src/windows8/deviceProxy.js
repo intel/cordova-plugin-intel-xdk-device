@@ -62,9 +62,6 @@ and limitations under the License
             //Bind osversion to  intel.xdk.device.
             intel.xdk.device.osversion = '8';
 
-            //Bind uuid to intel.xdk.device.
-            intel.xdk.device.uuid = 'Serial number is not available in windows store app.';
-
             //Bind platform to intel.xdk.device.
             intel.xdk.device.platform = 'windows8';
 
@@ -120,7 +117,6 @@ and limitations under the License
                 phonegapversion: cordova.version,
                 model: 'Model information is not available in windows store app.',
                 osversion: '8',
-                uuid: 'Serial number is not available in windows store app.',
                 platform: 'windows8',
                 initialOrientation: proxy.getOrientation(),
                 orientation: proxy.getOrientation(),
