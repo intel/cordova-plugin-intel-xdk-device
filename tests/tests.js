@@ -107,10 +107,6 @@ exports.defineAutoTests = function(){
                 expect(typeof intel.xdk.device.queryString).toEqual('string');
             });
 
-            it("should contain a uuid specification that is a string", function () {
-                expect(intel.xdk.device.uuid).toBeDefined();
-                expect(typeof intel.xdk.device.uuid).toEqual('string');
-            });
         });
         
         describe('blockRemotePages ', function () {
@@ -503,7 +499,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             'connection','hasCaching','hasStreaming',
             'initialOrientation', 'model', 'orientation',
             'osversion', 'phonegapversion', 'platform',
-            'queryString', 'uuid'
+            'queryString'
         ];
         
         property_list.forEach(function(key){

@@ -81,8 +81,6 @@ below for more information on events thrown by the device object.
     identifying the platform that the application is running on.
 -   [queryString](#querystring) — This property returns any query string 
     parameters passed along with a protocol handler call to start an application
--   [uuid](#uuid) — The uuid property returns a unique identification id for the 
-    device.
 
 ### Events
 
@@ -1435,31 +1433,6 @@ This property returns any query string parameters passed along with a protocol h
 
 ```javascript
 alert(intel.xdk.device.queryString);
-```
-
-### uuid
-
-The uuid property returns a unique identification id for the device.
-
-```javascript
-intel.xdk.device.uuid
-```
-
-#### Description
-
-The uuid property returns a unique identification id for the device.
-
-**NOTE:** Apple no longer permits obtaining the uuid within applications. 
-Therfore if using this property on an iOS device the following is applied:
-
--   **iOS 5:** Apple APIs are used to generate a unique GUID
--   **iOS 6** The Advertiser ID is returned as discussed in this
-    [announcement](https://developer.apple.com/news/?id=3212013a).
-
-#### Example
-
-```javascript
-alert(intel.xdk.device.uuid);
 ```
 
 Events

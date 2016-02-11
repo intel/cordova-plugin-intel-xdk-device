@@ -15,6 +15,10 @@
 # -->
 # Release Notes
 
+### 3.0.0 (Febrary 11, 2016)
+* Remove intel.xdk.device.uuid property
+* Remove wp8 platform
+
 ### 2.0.1 (November 20, 2015)
 * Update virtualPage APIs to be JS-only, improve Android implementation
 

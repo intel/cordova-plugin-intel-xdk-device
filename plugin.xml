@@ -16,7 +16,7 @@ and limitations under the License
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="intel.xdk.device"
-    version="2.0.2-dev">
+    version="3.0.0">
     <name>Intel XDK Device</name>
     <description>Intel XDK Device Plugin</description>
     <license>Apache 2.0</license>
@@ -59,36 +59,6 @@ and limitations under the License
         </config-file>
         <source-file src="src/android/Device.java" target-dir="src/com/intel/xdk/device" />
         <source-file src="src/android/remote_close.png" target-dir="res/drawable-xhdpi"/>
-    </platform>
-
-    <!-- Windows Phone 8 -->
-    <platform name="wp8">
-        <!-- placeholder for overriding wp8-specific props -->
-        <js-module src="www/wp8/device.js" name="device-wp8">
-            <merges target="intel.xdk" />
-        </js-module>
-
-        <source-file src="src/wp8/Device.cs" target-dir="" />
-        <source-file src="src/wp8/IntelCookieJar.cs" target-dir="" />
-
-        <source-file src="src/wp8/zxing.wp8.0.dll" target-dir="" />
-
-        <source-file src="src/wp8/UI/BarCodeControl.xaml" target-dir="UI" />
-        <source-file src="src/wp8/UI/BarCodeControl.xaml.cs" target-dir="UI" />
-        <source-file src="src/wp8/UI/PhotoCameraLuminanceSource.cs" target-dir="UI" />
-
-        <config-file target="config.xml" parent="/*">
-            <feature name="IntelXDKDevice">
-                <param name="wp-package" value="IntelXDKDevice" />
-            </feature>
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-            <Capability Name="ID_CAP_IDENTITY_DEVICE"/>
-            <Capability Name="ID_CAP_ISV_CAMERA" />
-        </config-file>
-
-        <source-file src="src/windows8/remote_close.png" target-dir="../../Images"/>
     </platform>
 
     <!-- Windows -->
