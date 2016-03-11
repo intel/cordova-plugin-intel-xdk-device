@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -30,10 +29,8 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
-import android.os.Build;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.text.ClipboardManager;
 import android.util.DisplayMetrics;
@@ -58,40 +55,23 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class provides access to various features on the device.
@@ -125,8 +105,6 @@ public class Device extends CordovaPlugin {
     private int displayOrientation;
     //Used in intel.xdk.orientation.change
     private String lastOrientation;
-
-    public DefaultHttpClient persistentHttpClient;
 
     private Method evaluateJavascript, sendJavascript;
     private ValueCallback emptyVC;
@@ -238,43 +216,6 @@ public class Device extends CordovaPlugin {
 
         listener.enable();
         registerScreenStatusReceiver();
-
-        // Wait this many milliseconds max for the TCP connection to be established
-        final int CONNECTION_TIMEOUT = 60 * 1000;
-        // Wait this many milliseconds max for the server to send us data once the connection has been established
-        final int SO_TIMEOUT = 5 * 60 * 1000;
-
-        persistentHttpClient = new DefaultHttpClient() {
-            @Override
-            protected ClientConnectionManager createClientConnectionManager() {
-                SchemeRegistry registry = new SchemeRegistry();
-                registry.register(
-                        new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-                registry.register(
-                        new Scheme("https", getHttpsSocketFactory(), 443));
-                HttpParams params = getParams();
-                HttpConnectionParams.setConnectionTimeout(params, CONNECTION_TIMEOUT);
-                HttpConnectionParams.setSoTimeout(params, SO_TIMEOUT);
-                //HttpProtocolParams.setUserAgent(params, getUserAgent(HttpProtocolParams.getUserAgent(params)));
-                return new ThreadSafeClientConnManager(params, registry);
-            }
-
-            /** Gets an HTTPS socket factory with SSL Session Caching if such support is available, otherwise falls back to a non-caching factory
-             * @return
-             */
-            protected SocketFactory getHttpsSocketFactory() {
-                try {
-                    Class<?> sslSessionCacheClass = Class.forName("android.net.SSLSessionCache");
-                    Object sslSessionCache = sslSessionCacheClass.getConstructor(Context.class).newInstance(activity.getApplicationContext());
-                    Method getHttpSocketFactory = Class.forName("android.net.SSLCertificateSocketFactory").getMethod("getHttpSocketFactory", new Class<?>[]{int.class, sslSessionCacheClass});
-                    return (SocketFactory) getHttpSocketFactory.invoke(null, CONNECTION_TIMEOUT, sslSessionCache);
-                } catch (Exception e) {
-                    Log.e("HttpClientProvider", "Unable to use android.net.SSLCertificateSocketFactory to get a SSL session caching socket factory, falling back to a non-caching socket factory", e);
-                    return SSLSocketFactory.getSocketFactory();
-                }
-
-            }
-        };//Static HttpClient Object       
 
         //cache references to methods for use in injectJS
         try {
@@ -489,28 +430,13 @@ public class Device extends CordovaPlugin {
             //Request header
             headers = obj.getString("headers");
 
-
             String js = null;
-
-            //ios does not validate
-
             if (method == null || method.length() == 0) method = "GET";
 
-            DefaultHttpClient client = persistentHttpClient;
-            HttpEntity entity = null;
-            HttpUriRequest request = null;
-            HttpResponse response = null;
+            HttpURLConnection connection = (HttpURLConnection) new URL(requestUrl).openConnection();
             boolean forceUTF8 = false;
 
             try {
-                if ("POST".equalsIgnoreCase(method)) {
-                    request = new HttpPost(requestUrl);
-                    ((HttpPost) request).setEntity(new ByteArrayEntity(body.getBytes()));
-                    request.getParams().setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE, false);
-                } else {
-                    request = new HttpGet(requestUrl);
-                }
-
                 if (headers.length() > 0) {
                     String[] headerArray = headers.split("&");
 
@@ -522,7 +448,7 @@ public class Device extends CordovaPlugin {
                             String value = headerPair[1];
                             if (field != null && value != null) {
                                 if (!"content-length".equals(field.toLowerCase())) {//skip Content-Length - causes error because it is managed by the request
-                                    request.setHeader(field, value);
+                                    connection.setRequestProperty(field, value);
                                 }
 
                                 field = field.toLowerCase();
@@ -536,134 +462,149 @@ public class Device extends CordovaPlugin {
 
                 }
 
-                response = client.execute(request);
-
-                //check response status
-                if (response != null) {
-                    entity = response.getEntity();
-
-                    //inject response
-                    String responseBody = null;
-                    if (forceUTF8) {
-                        responseBody = EntityUtils.toString(entity, "UTF-8");
-                    } else {
-                        responseBody = EntityUtils.toString(entity);
-                    }
-
-                    char[] bom = {0xef, 0xbb, 0xbf};
-                    //check for BOM characters, then strip if present
-                    if (responseBody.length() >= 3 && responseBody.charAt(0) == bom[0] && responseBody.charAt(1) == bom[1] && responseBody.charAt(2) == bom[2]) {
-                        responseBody = responseBody.substring(3);
-                    }
-
-                    //escape existing backslashes
-                    responseBody = responseBody.replaceAll("\\\\", "\\\\\\\\");
-
-                    //escape internal double-quotes
-                    responseBody = responseBody.replaceAll("\"", "\\\\\"");
-                    responseBody = responseBody.replaceAll("'", "\\\\'");
-
-                    //replace linebreaks with \n
-                    responseBody = responseBody.replaceAll("\\r\\n|\\r|\\n", "\\\\n");
-
-                    List<String> cookieData = new ArrayList<String>();
-
-                    StringBuilder extras = new StringBuilder("{");
-                    extras.append(String.format("status:'%d',", response.getStatusLine().getStatusCode()));
-
-                    String status = null;
-                    switch (response.getStatusLine().getStatusCode()) {
-                        case 200:
-                            status = "OK";
-                            break;
-                        case 201:
-                            status = "CREATED";
-                            break;
-                        case 202:
-                            status = "Accepted";
-                            break;
-                        case 203:
-                            status = "Partial Information";
-                            break;
-                        case 204:
-                            status = "No Response";
-                            break;
-                        case 301:
-                            status = "Moved";
-                            break;
-                        case 302:
-                            status = "Found";
-                            break;
-                        case 303:
-                            status = "Method";
-                            break;
-                        case 304:
-                            status = "Not Modified";
-                            break;
-                        case 400:
-                            status = "Bad request";
-                            break;
-                        case 401:
-                            status = "Unauthorized";
-                            break;
-                        case 402:
-                            status = "PaymentRequired";
-                            break;
-                        case 403:
-                            status = "Forbidden";
-                            break;
-                        case 404:
-                            status = "Not found";
-                            break;
-                        case 500:
-                            status = "Internal Error";
-                            break;
-                        case 501:
-                            status = "Not implemented";
-                            break;
-                        case 502:
-                            status = "Service temporarily overloaded";
-                            break;
-                        case 503:
-                            status = "Gateway timeout";
-                            break;
-                    }
-                    extras.append(String.format("statusText:'%s',", status));
-                    extras.append("headers: {");
-
-                    Header[] allHeaders = response.getAllHeaders();
-                    for (Header header : allHeaders) {
-                        String key = header.getName();
-                        String value = header.getValue();
-                        value = value.replaceAll("'", "\\\\'");
-                        if (key.toLowerCase().equals("set-cookie"))
-                            cookieData.add(value);
-                        else
-                            extras.append(String.format("'%s':'%s',", key, value));
-                    }
-
-                    String concatCookies = cookieData.toString();
-                    concatCookies = concatCookies.substring(0, concatCookies.length());
-                    extras.append(String.format("'Set-Cookie':'%s',", concatCookies.substring(1, concatCookies.length() - 1)));
-
-                    String cookieArray = "[";
-                    for (int i = 0; i < cookieData.size(); i++)
-                        cookieArray += String.format("'%s',", cookieData.get(i));
-                    cookieArray += "]";
-
-                    extras.append("'All-Cookies': " + cookieArray);
-                    extras.append("} }");
-
-                    js = String.format(
-                            "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.remote.data',true,true);e.success=true;e.id='%s';e.response='%s';e.extras=%s;document.dispatchEvent(e);",
-                            id, responseBody, extras.toString());
-                } else {
-                    throw new Exception("response was null");//error -- code: " + response.getStatusLine().getStatusCode());
+                if ("POST".equalsIgnoreCase(method)) {
+                    connection.setRequestMethod(method);
+                    connection.setDoOutput(true);
+                    connection.setFixedLengthStreamingMode(body.length());
+                    DataOutputStream dStream = new DataOutputStream(connection.getOutputStream());
+                    dStream.writeBytes(body);
+                    dStream.flush();
+                    dStream.close();
                 }
-            } catch (CertificateException cex) {
+
+                //inject response
+                int statusCode = connection.getResponseCode();
+
+                final StringBuilder response = new StringBuilder();
+                try {
+                    InputStream responseStream = connection.getInputStream();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(responseStream));
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line);
+                    }
+                    br.close();
+                } catch(Exception e) {}
+
+                String responseBody = null;
+// how to handle UTF8 without EntityUtils?
+//                if (forceUTF8) {
+//                    responseBody = EntityUtils.toString(entity, "UTF-8");
+//                } else {
+//                    responseBody = EntityUtils.toString(entity);
+//                }
+                responseBody = response.toString();
+                String responseMessage = connection.getResponseMessage();
+
+                char[] bom = {0xef, 0xbb, 0xbf};
+                //check for BOM characters, then strip if present
+                if (responseBody.length() >= 3 && responseBody.charAt(0) == bom[0] && responseBody.charAt(1) == bom[1] && responseBody.charAt(2) == bom[2]) {
+                    responseBody = responseBody.substring(3);
+                }
+
+                //escape existing backslashes
+                responseBody = responseBody.replaceAll("\\\\", "\\\\\\\\");
+
+                //escape internal double-quotes
+                responseBody = responseBody.replaceAll("\"", "\\\\\"");
+                responseBody = responseBody.replaceAll("'", "\\\\'");
+
+                //replace linebreaks with \n
+                responseBody = responseBody.replaceAll("\\r\\n|\\r|\\n", "\\\\n");
+
+                StringBuilder extras = new StringBuilder("{");
+                extras.append(String.format("status:'%d',", statusCode));
+
+                String status = null;
+                switch (statusCode) {
+                    case 200:
+                        status = "OK";
+                        break;
+                    case 201:
+                        status = "CREATED";
+                        break;
+                    case 202:
+                        status = "Accepted";
+                        break;
+                    case 203:
+                        status = "Partial Information";
+                        break;
+                    case 204:
+                        status = "No Response";
+                        break;
+                    case 301:
+                        status = "Moved";
+                        break;
+                    case 302:
+                        status = "Found";
+                        break;
+                    case 303:
+                        status = "Method";
+                        break;
+                    case 304:
+                        status = "Not Modified";
+                        break;
+                    case 400:
+                        status = "Bad request";
+                        break;
+                    case 401:
+                        status = "Unauthorized";
+                        break;
+                    case 402:
+                        status = "PaymentRequired";
+                        break;
+                    case 403:
+                        status = "Forbidden";
+                        break;
+                    case 404:
+                        status = "Not found";
+                        break;
+                    case 500:
+                        status = "Internal Error";
+                        break;
+                    case 501:
+                        status = "Not implemented";
+                        break;
+                    case 502:
+                        status = "Service temporarily overloaded";
+                        break;
+                    case 503:
+                        status = "Gateway timeout";
+                        break;
+                }
+                extras.append(String.format("statusText:'%s',", status));
+                extras.append("headers: {");
+
+                List<String> cookieData = new ArrayList<String>();
+                Map<String, List<String>> allHeaders = connection.getHeaderFields();
+                for (String key : allHeaders.keySet()) {
+                    if(key == null) {
+                        continue;
+                    }
+                    String value = connection.getHeaderField(key);
+                    value = value.replaceAll("'", "\\\\'");
+                    if (key.toLowerCase().equals("set-cookie"))
+                        cookieData.add(value);
+                    else
+                        extras.append(String.format("'%s':'%s',", key, value));
+                }
+
+                String concatCookies = cookieData.toString();
+                concatCookies = concatCookies.substring(0, concatCookies.length());
+                extras.append(String.format("'Set-Cookie':'%s',", concatCookies.substring(1, concatCookies.length() - 1)));
+
+                String cookieArray = "[";
+                for (int i = 0; i < cookieData.size(); i++)
+                    cookieArray += String.format("'%s',", cookieData.get(i));
+                cookieArray += "]";
+
+                extras.append("'All-Cookies': " + cookieArray);
+                extras.append("} }");
+
                 js = String.format(
-                        "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.remote.data',true,true);e.success=false;e.id='%s';e.response='';e.extras={};e.error='%s';document.dispatchEvent(e);",
-                        id, cex.getMessage());
+                        "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.remote.data',true,true);e.success=true;e.id='%s';e.response='%s';e.extras=%s;document.dispatchEvent(e);",
+                        id, responseBody, extras.toString());
+
             } catch (Exception ex) {
                 js = String.format(
                         "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.remote.data',true,true);e.success=false;e.id='%s';e.response='';e.extras={};e.error='%s';document.dispatchEvent(e);",
@@ -672,6 +613,8 @@ public class Device extends CordovaPlugin {
                 js = String.format(
                         "javascript: var e = document.createEvent('Events');e.initEvent('intel.xdk.device.remote.data',true,true);e.success=false;e.id='%s';e.response='';e.extras={};e.error='%s';document.dispatchEvent(e);",
                         id, err.getMessage());
+            } finally {
+                connection.disconnect();
             }
 
 

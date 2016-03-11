@@ -15,6 +15,9 @@
 # -->
 # Release Notes
 
+### 3.0.1 (March 11, 2016)
+* Removed dependency on Apache HTTP client for [compatibility with Android 6.0](http://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client "Android 6.0 Release Notes")
+
 ### 3.0.0 (Febrary 11, 2016)
 * Remove intel.xdk.device.uuid property
 * Remove wp8 platform

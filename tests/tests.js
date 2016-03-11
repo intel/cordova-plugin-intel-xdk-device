@@ -477,7 +477,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         'Expected result: ' +
         '<div id="buttonGetRemoteDataWithID"></div>' +
         'Expected result: ' +
-        '<div id="buttonGetRemoteDataExt"></div>' +
+        '<div id="buttonGetRemoteDataExtGet"></div>' +
+        'Expected result: ' +
+        '<div id="buttonGetRemoteDataExtPost"></div>' +
         'Expected result: ' +
         
         '<h3>Copy to Clipboard</h3>' +
@@ -619,7 +621,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         intel.xdk.device.getRemoteDataWithID(TestSuite.SERVER_URL, "GET", "name=intel.xdk.device", "success", "error", 12345);
     },'buttonGetRemoteDataWithID');
     
-    createActionButton('getRemoteDataExt()',function(){
+    createActionButton('getRemoteDataExt() GET',function(){
         var paramsObj = new intel.xdk.device.RemoteDataParameters();
 
         paramsObj.url = TestSuite.SERVER_URL;
@@ -631,8 +633,22 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         console.log('executing', 'intel.xdk.device.getRemoteDataExt');
         intel.xdk.device.getRemoteDataExt(paramsObj);
-    },'buttonGetRemoteDataExt');
-    
+    },'buttonGetRemoteDataExtGet');
+
+    createActionButton('getRemoteDataExt() POST',function(){
+        var paramsObj = new intel.xdk.device.RemoteDataParameters();
+
+        paramsObj.url = "https://httpbin.org/post";//TestSuite.SERVER_URL;
+        paramsObj.id = "2345";
+        paramsObj.body = "name=intel.xdk.device&type=event&fizz=buzz";
+        paramsObj.method = 'POST';
+        paramsObj.addHeader("Connection","Keep-Alive");
+        paramsObj.addHeader("Content-Type", "multipart");
+
+        console.log('executing', 'intel.xdk.device.getRemoteDataExt');
+        intel.xdk.device.getRemoteDataExt(paramsObj);
+    },'buttonGetRemoteDataExtPost');
+
     createActionButton('copyToClipboard()',function(){
         console.log('executing', 'intel.xdk.device.copyToClipboard');
         intel.xdk.device.copyToClipboard('some text');
